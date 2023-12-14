@@ -1,3 +1,5 @@
+> [!warning] This branch is designated for BDS Preview. Please note that not all features are guaranteed to be supported, and not all bugs are guaranteed to be fixed.
+
 # BDSX : BDS + node.js
 
 ![logo](bdsx/images/icon.png)\

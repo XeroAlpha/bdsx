@@ -7,7 +7,7 @@ import * as BDS_VERSION_DEFAULT from "../version-bds.json";
 import * as BDSX_CORE_VERSION_DEFAULT from "../version-bdsx.json";
 import { BDSInstaller, InstallItem } from "./installercls";
 
-const BDS_LINK_DEFAULT = "https://minecraft.azureedge.net/bin-win/bedrock-server-%BDS_VERSION%.zip";
+const BDS_LINK_DEFAULT = "https://minecraft.azureedge.net/bin-win-preview/bedrock-server-%BDS_VERSION%.zip";
 const BDSX_CORE_LINK_DEFAULT = "https://github.com/bdsx/bdsx-core/releases/download/%BDSX_CORE_VERSION%/bdsx-core-%BDSX_CORE_VERSION%.zip";
 const PDBCACHE_LINK_DEFAULT = "https://github.com/bdsx/pdbcache/releases/download/%BDS_VERSION%/pdbcache.zip";
 
