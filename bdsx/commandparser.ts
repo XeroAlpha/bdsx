@@ -37,7 +37,8 @@ function selectMore(...symbols: string[]): NativePointer {
     }
     for (const item of map.values()) {
         if (item !== maximum) {
-            console.error(colors.yellow(`[BDSX] selectMore exception: ${item.symbol}`));
+            // console.error(colors.yellow(`[BDSX] selectMore exception: ${item.symbol}`));
+            // Because it contains debug info, so these symbols refer to different addrs
         }
     }
     return maximum.addr;

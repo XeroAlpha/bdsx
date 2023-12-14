@@ -132,7 +132,7 @@ function patchForStdio(): void {
         // it's hard to replace with the normal hooking method because of it has the lambda call inside.
         "hook-command-output",
         "?send@CommandOutputSender@@UEAAXAEBVCommandOrigin@@AEBVCommandOutput@@@Z",
-        0xb8,
+        0x194,
         asmcode.CommandOutputSenderHook,
         Register.rdx,
         true,
@@ -142,7 +142,7 @@ function patchForStdio(): void {
             0x45, 0x33, 0xC0,                   // xor r8d,r8d
             0x41, 0x8D, 0x51, 0xF5,             // lea edx,qword ptr ds:[r9-B]
             0x33, 0xC9,                         // xor ecx,ecx
-            0xE8, null, null, null, null,       // call <bedrock_server.void __cdecl BedrockLog::log(enum BedrockLog::LogCat
+            0xE8, null, null, null, null,       // call Bedrock::Diagnostics::log
         ],
     );
 
@@ -255,18 +255,17 @@ function _launch(asyncResolve: () => void): void {
 
     procHacker.patching(
         "hook-game-thread",
-        "std::thread::_Invoke<std::tuple<<lambda_56977c8f513937af2eebbbd13c37f013> >,0>", // caller of ServerInstance::_update
-        6,
+        "std::thread::_Invoke<std::tuple<<lambda_56977c8f513937af2eebbbd13c37f013> >,0>", // caller of gameThreadInner
+        0x6,
         asmcode.gameThreadHook, // original depended
         Register.rax,
         true,
         // prettier-ignore
         [
             0x48, 0x8B, 0xD9, // mov rbx,rcx
-            0xE8, 0xFF, 0xFF, 0xFF, 0xFF, // call <bedrock_server.<lambda_56977c8f513937af2eebbbd13c37f013>::operator()>
-            0xE8, 0xFF, 0xFF, 0xFF, 0xFF, // call <bedrock_server._Cnd_do_broadcast_at_thread_exit>
+            0xE8, null, null, null, null, // call <lambda_56977c8f513937af2eebbbd13c37f013>::operator()
+            0xE8, null, null, null, null, // call _Cnd_do_broadcast_at_thread_exit
         ],
-        [4, 8, 9, 13], // [4, 8), [9, 13)
     );
 
     const instances = {} as {
@@ -283,7 +282,7 @@ function _launch(asyncResolve: () => void): void {
     );
     thisGetter.register(
         ServerNetworkSystem,
-        "??0ServerNetworkSystem@@QEAA@AEAVScheduler@@AEBV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@AEBUNetworkSystemToggles@@AEBV?$NonOwnerPointer@VNetworkDebugManager@@@Bedrock@@V?$ServiceReference@VServicesManager@@@@V?$not_null@V?$NonOwnerPointer@VNetworkSessionOwner@@@Bedrock@@@gsl@@@Z",
+        "??0ServerNetworkSystem@@QEAA@AEAVScheduler@@AEBV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@AEBUNetworkSystemToggles@@AEBV?$NonOwnerPointer@VNetworkDebugManager@@@Bedrock@@V?$ServiceReference@VServicesManager@@@@V?$not_null@V?$NonOwnerPointer@VNetworkSessionOwner@@@Bedrock@@@gsl@@UNetworkSettingOptions@@@Z",
         "serverNetworkSystem",
     );
     thisGetter.register(bd_server.DedicatedServer, "??0DedicatedServer@@QEAA@XZ", "dedicatedServer");
@@ -339,7 +338,7 @@ function _launch(asyncResolve: () => void): void {
     procHacker.patching(
         "update-hook",
         "<lambda_56977c8f513937af2eebbbd13c37f013>::operator()", // caller of ServerInstance::_update
-        0x93e,
+        0xbef,
         asmcode.updateWithSleep,
         Register.rax,
         true,
@@ -347,9 +346,9 @@ function _launch(asyncResolve: () => void): void {
         [
             0x48, 0x2B, 0xC8,                         // sub rcx,rax
             0x48, 0x81, 0xF9, 0x88, 0x13, 0x00, 0x00, // cmp rcx,1388
-            0x7C, 0x0B,                               // jl bedrock_server.7FF743BA7B50
-            0x48, 0x8D, 0x4C, 0x24, 0x20,             // lea rcx,qword ptr ss:[rsp+20]
-            0xE8, null, null, null, null,             // call <bedrock_server.void __cdecl std::this_thread::sleep_until<struct std::chrono::steady_clock,class std::chrono::duration<__int64,struct std::ratio<1,1000000000> > >(class std::chrono::ti
+            0x7C, 0x0B,                               // jl :after_nop
+            0x48, 0x8D, 0x4C, 0x24, 0x38,             // lea rcx,qword ptr [rsp+38]
+            0xE8, null, null, null, null,             // call std::this_thread::sleep_until<>
             0x90,                                     // nop
         ],
     );

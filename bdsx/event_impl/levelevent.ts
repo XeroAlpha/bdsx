@@ -52,7 +52,7 @@ function onLevelExplode(
     breaksBlocks: bool_t,
     maxResistance: float32_t,
     allowUnderwater: bool_t,
-): void {
+): bool_t {
     const event = new LevelExplodeEvent(level, blockSource, entity, position, power, causesFire, breaksBlocks, maxResistance, allowUnderwater);
     const canceled = events.levelExplode.fire(event) === CANCEL;
     decay(level);
@@ -69,10 +69,11 @@ function onLevelExplode(
             event.allowUnderwater,
         );
     }
+    return false;
 }
 const _onLevelExplode = procHacker.hooking(
-    "?explode@Level@@UEAAXAEAVBlockSource@@PEAVActor@@AEBVVec3@@M_N3M3@Z",
-    void_t,
+    "?explode@Level@@UEAA_NAEAVBlockSource@@PEAVActor@@AEBVVec3@@M_N3M3@Z",
+    bool_t,
     null,
     Level,
     BlockSource,

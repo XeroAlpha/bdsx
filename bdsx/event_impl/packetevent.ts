@@ -19,6 +19,7 @@ import { CxxStringWrapper } from "../pointer";
 import { procHacker } from "../prochacker";
 import { CxxSharedPtr } from "../sharedpointer";
 import { remapAndPrintError } from "../source-map-support";
+import { bdsxEqualsAssert } from "../warning";
 
 @nativeClass(null)
 class ReadOnlyBinaryStream extends AbstractClass {
@@ -42,12 +43,12 @@ ReadOnlyBinaryStream.prototype.read = procHacker.jsv(
 @nativeClass(null)
 class OnPacketRBP extends AbstractClass {
     // NetworkSystem::_sortAndPacketizeEvents before MinecraftPackets::createPacket
-    @nativeField(int32_t, 0x180)
+    @nativeField(int32_t, 0x1a0)
     packetId: MinecraftPacketIds;
     // NetworkSystem::_sortAndPacketizeEvents before MinecraftPackets::createPacket
-    @nativeField(CxxSharedPtr.make(Packet), 0x190)
+    @nativeField(CxxSharedPtr.make(Packet), 0x1b0)
     packet: CxxSharedPtr<Packet>; // NetworkSystem::_sortAndPacketizeEvents before MinecraftPackets::createPacket
-    @nativeField(ReadOnlyBinaryStream, 0x230)
+    @nativeField(ReadOnlyBinaryStream, 0x210)
     stream: ReadOnlyBinaryStream; // after NetworkConnection::receivePacket
 }
 
@@ -186,20 +187,41 @@ bedrockServer.withLoading().then(() => {
     const sendToClientsSymbol =
         "?sendToClients@LoopbackPacketSender@@UEAAXAEBV?$vector@UNetworkIdentifierWithSubId@@V?$allocator@UNetworkIdentifierWithSubId@@@std@@@std@@AEBVPacket@@@Z";
 
+    procHacker.verify(
+        "packet-receive",
+        packetizeSymbol,
+        0x1f9,
+        // prettier-ignore
+        [
+            0x49, 0x8b, 0xcf,               // mov rcx, r15  ; NetworkConnection
+            0xe8, null, null, null, null,   // call NetworkConnection::receivePacket
+        ],
+    );
+    procHacker.verify(
+        "packet-construct-stream",
+        packetizeSymbol,
+        0x226,
+        // prettier-ignore
+        [
+            0x48, 0x8d, 0x8d, 0x10, 0x02, 0x00, 0x00, // lea rcx, qword ptr [rbp+0x210]  ; ReadOnlyBinaryStream
+            0xe8, null, null, null, null,             // call ReadOnlyBinaryStream::ReadOnlyBinaryStream
+        ],
+    );
+
     // hook raw
     asmcode.onPacketRaw = makefunc.np(onPacketRaw, PacketSharedPtr, null, OnPacketRBP, NetworkConnection);
     procHacker.patching(
         "hook-packet-raw",
         packetizeSymbol,
-        0x2f6,
+        0x32c,
         asmcode.packetRawHook, // original code depended
         Register.rax,
         true,
         // prettier-ignore
         [
-            0x8B, 0x95, 0x80, 0x01, 0x00, 0x00,        // mov edx,dword ptr ss:[rbp+180]
-            0x48, 0x8D, 0x8D, 0x90, 0x01, 0x00, 0x00,  // lea rcx,qword ptr ss:[rbp+190]
-            0xE8, null, null, null, null,              // call <bedrock_server.public: static class std::shared_ptr<class Packet> __cdecl MinecraftPackets::createPacket
+            0x8B, 0x95, 0xa0, 0x01, 0x00, 0x00,        // mov edx,dword ptr [rbp+0x1a0]  ; packetId
+            0x48, 0x8D, 0x8D, 0xb0, 0x01, 0x00, 0x00,  // lea rcx,qword ptr [rbp+0x1b0]  ; packet
+            0xE8, null, null, null, null,              // call MinecraftPackets::createPacket
             0x90,                                      // nop
         ],
     );
@@ -207,19 +229,19 @@ bedrockServer.withLoading().then(() => {
     // hook before
     asmcode.onPacketBefore = makefunc.np(onPacketBefore, void_t, { name: "onPacketBefore" }, OnPacketRBP, StaticPointer, int32_t, NetworkConnection);
 
-    asmcode.packetBeforeOriginal = proc["<lambda_e258b204e306bd72c6db47d9931970b2>::operator()"];
+    asmcode.packetBeforeOriginal = proc["<lambda_2b5efa16bbc0277735a33e0ff831c68a>::operator()"];
     procHacker.patching(
         "hook-packet-before",
         packetizeSymbol,
-        0x396,
+        0x404,
         asmcode.packetBeforeHook, // original code depended
         Register.rax,
         true,
         // prettier-ignore
         [
-            0x48, 0x8D, 0x95, 0xE0, 0x01, 0x00, 0x00,  // lea rdx,qword ptr ss:[rbp+1E0]
-            0x48, 0x8D, 0x4D, 0x10,                    // lea rcx,qword ptr ss:[rbp+10]
-            0xE8, null, null, null, null,              // call <bedrock_server.<lambda_e258b204e306bd72c6db47d9931970b2>::operator()>
+            0x48, 0x8D, 0x95, 0xC0, 0x02, 0x00, 0x00,  // lea rdx,qword ptr [rbp+2c0]
+            0x48, 0x8D, 0x4D, 0x28,                    // lea rcx,qword ptr [rbp+28]
+            0xE8, null, null, null, null,              // call <>::operator()
             0x90,                                      // nop
         ],
     );
@@ -232,40 +254,58 @@ bedrockServer.withLoading().then(() => {
     procHacker.patching(
         "hook-packet-after",
         packetizeSymbol,
-        0x794,
+        0x854,
         asmcode.packetAfterHook, // original code depended
         Register.rdx,
         true,
         // prettier-ignore
         [
-            0x4C, 0x8B, 0xC6,                          // mov r8,rsi
-            0x49, 0x8B, 0xD6,                          // mov rdx,r14
+            0x4D, 0x8B, 0xC4,                          // mov r8,r12
+            0x49, 0x8B, 0xD7,                          // mov rdx,r14
             0x48, 0x8B, 0x40, 0x08,                    // mov rax,qword ptr ds:[rax+8]
             0xFF, 0x15, null, null, null, null,        // call qword ptr ds:[<__guard_dispatch_icall_fptr>]
         ],
+    );
+
+    bdsxEqualsAssert(
+        proc["??_7LoginPacket@@6B@"].getPointer(0x08),
+        proc["?getId@LoginPacket@@UEBA?AW4MinecraftPacketIds@@XZ"],
+        "unexpected Packet::vftable structure",
     );
 
     // hook send
     asmcode.onPacketSend = makefunc.np(onPacketSend, int32_t, null, int32_t, NetworkIdentifier, Packet);
     asmcode.sendOriginal = procHacker.hookingRaw("?send@NetworkSystem@@QEAAXAEBVNetworkIdentifier@@AEBVPacket@@W4SubClientId@@@Z", asmcode.packetSendHook);
 
-    asmcode.packetSendAllCancelPoint = proc[sendToClientsSymbol].add(0xde); // jump to after NetworkSystem::_sendInternal
+    procHacker.verify(
+        "packet-send-all-internal",
+        sendToClientsSymbol,
+        0x123,
+        // prettier-ignore
+        [
+            0x4D, 0x8B, 0xC4,              // mov r8, r12    ; packet
+            0x48, 0x8B, 0xD3,              // mov rdx, rbx   ; ni
+            0xE8, null, null, null, null,  // call NetworkSystem::_sendInternal
+        ],
+    );
+
+    asmcode.packetSendAllCancelPoint = proc[sendToClientsSymbol].add(0x12e); // jump to after NetworkSystem::_sendInternal
 
     // hook send all
     procHacker.patching(
         "hook-packet-send-all",
         sendToClientsSymbol,
-        0xb0,
+        0x100,
         asmcode.packetSendAllHook, // original code depended
         Register.rax,
         true,
         // prettier-ignore
-        [
-            0x49, 0x8B, 0x04, 0x24,                     // mov rax,qword ptr ds:[r12]
-            0x49, 0x8D, 0x96, 0x00, 0x02, 0x00, 0x00,   // lea rdx,qword ptr ds:[r14+200]
-            0x49, 0x8B, 0xCC,                           // mov rcx,r12
+        [ // after call BinaryStream::writeUnsignedVarInt
+            0x49, 0x8B, 0x04, 0x24,                     // mov rax,qword ptr ds:[r12]  ; packet.vftable
+            0x49, 0x8D, 0x96, 0x00, 0x02, 0x00, 0x00,   // lea rdx,qword ptr ds:[r14+200]  ; BinaryStream
+            0x49, 0x8B, 0xCC,                           // mov rcx,r12  ; packet
             0x48, 0x8B, 0x40, 0x18,                     // mov rax,qword ptr ds:[rax+18]
-            0xFF, 0x15, null, null, null, null,         // call qword ptr ds:[<__guard_dispatch_icall_fptr>]
+            0xFF, 0x15, null, null, null, null,         // call qword ptr ds:[<__guard_dispatch_icall_fptr>]  ; packet::write
             // CAUTION: jump target after this
         ],
     );

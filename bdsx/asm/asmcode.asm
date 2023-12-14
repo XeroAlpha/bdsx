@@ -418,7 +418,7 @@ endp
 export def CommandOutputSenderHookCallback:qword
 export proc CommandOutputSenderHook
     stack 28h
-    lea rcx,[rbp+7]
+    lea rcx,[rbp-9] ; 2nd parameter of <>::operator()
     call CommandOutputSenderHookCallback
 endp
 
@@ -510,19 +510,19 @@ export def createPacketRaw:qword
 export def enabledPacket:byte[PACKET_ID_COUNT]
 
 export proc packetRawHook
-    ; dword ptr[rbp+0x180] - packetId
-    mov edx, dword ptr[rbp+0x180]
+    ; dword ptr[rbp+0x1a0] - packetId
+    mov edx, dword ptr[rbp+0x1a0]
     lea rax, enabledPacket
     mov al, byte ptr[rax+rdx]
     unwind
     test al, 0x01
     jz _skipEvent
     mov rcx, rbp ; rbp
-    mov rdx, r14 ; NetworkConnection
+    mov rdx, r15 ; NetworkConnection
     jmp onPacketRaw
  _skipEvent:
     ; rdx - packetId
-    lea rcx, [rbp+0x190] ; packet
+    lea rcx, [rbp+0x1b0] ; packet
     jmp createPacketRaw
 endp
 
@@ -531,19 +531,19 @@ export def onPacketBefore:qword
 export proc packetBeforeHook
     ; dword ptr[rbp+0x180] - packetId
     stack 28h
-    lea rdx,qword ptr[rbp+0x1E0] ; original code
-    lea rcx,qword ptr[rbp+0x10] ; original code
+    lea rdx,qword ptr[rbp+0x2c0] ; original code
+    lea rcx,qword ptr[rbp+0x28] ; original code
     call packetBeforeOriginal ; original code
     unwind
     lea rcx, enabledPacket
-    mov r8d, dword ptr[rbp+0x180] ; packetId
+    mov r8d, dword ptr[rbp+0x1a0] ; packetId
     movzx ecx, byte ptr[rcx+r8]
     test cl, 0x02
     jz _skipEvent
     mov rcx, rbp
     mov rdx, rsp
     ; r8 - packetId
-    mov r9, r14 ; NetworkConnection
+    mov r9, r15 ; NetworkConnection
     jmp onPacketBefore
 _skipEvent:
     ret
@@ -558,19 +558,19 @@ export proc packetAfterHook
     stack 28h
 
     ; orignal codes
-    mov r8, rsi ; callback
-    mov rdx, r14 ; NetworkConnection
+    mov r8, r12 ; callback (null)
+    mov rdx, r15 ; NetworkConnection
     mov rax, [rax+8]
     call __guard_dispatch_icall_fptr ; ServerNetworkHandler::handle()
 
     lea r10, enabledPacket
-    mov r8d, dword ptr[rbp+0x180] ; packetId
+    mov r8d, dword ptr[rbp+0x1a0] ; packetId
     movzx eax, byte ptr[r10+r8]
     unwind
     test al, 0x04
     jz _skipEvent
-    mov rcx,[rbp+0x190] ; packet
-    mov rdx, r14 ; ni
+    mov rcx,[rbp+0x1b0] ; packet
+    mov rdx, r15 ; NetworkConnection->ni
     ; r8 - packetId
     jmp onPacketAfter
 _skipEvent:

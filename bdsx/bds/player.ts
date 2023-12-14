@@ -998,6 +998,12 @@ export class Player extends Mob implements HasStorage {
 export const ServerPlayer = Player; // Player is always ServerPlayer on the server software.
 export type ServerPlayer = Player;
 
+export enum LookDuration {
+    Instant = 0,
+    Continuous = 1,
+    UntilMove = 2,
+}
+
 export class SimulatedPlayer extends ServerPlayer {
     /**
      * Create SimulatedPlayer
@@ -1037,10 +1043,10 @@ export class SimulatedPlayer extends ServerPlayer {
     simulateDisconnect(): void {
         abstract();
     }
-    simulateLookAt(target: Actor): void;
-    simulateLookAt(target: Vec3): void;
-    simulateLookAt(target: BlockPos): void;
-    simulateLookAt(target: BlockPos | Actor | Vec3): void {
+    simulateLookAt(target: Actor, lookDuration?: LookDuration): void;
+    simulateLookAt(target: Vec3, lookDuration?: LookDuration): void;
+    simulateLookAt(target: BlockPos, lookDuration?: LookDuration): void;
+    simulateLookAt(target: BlockPos | Actor | Vec3, lookDuration?: LookDuration): void {
         abstract();
     }
     simulateJump(): void {
@@ -1061,7 +1067,7 @@ export class SimulatedPlayer extends ServerPlayer {
     simulateLocalMove(pos: Vec3, speed: number): void {
         abstract();
     }
-    simulateMoveToLocation(pos: Vec3, speed: number): void {
+    simulateMoveToLocation(pos: Vec3, speed: number, faceTarget: boolean): void {
         abstract();
     }
     /* move to target with navigation
