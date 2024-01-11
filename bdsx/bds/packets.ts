@@ -487,7 +487,7 @@ export class MobEffectPacket extends Packet {
 }
 
 @nativeClass(null)
-class AttributeModifier extends AbstractClass {}
+class AttributeModifier extends AbstractClass { }
 
 @nativeClass()
 export class AttributeData extends NativeClass {
@@ -1136,7 +1136,7 @@ class AvailableCommandsCommandData extends AbstractClass {
 }
 
 @nativeClass(0x38)
-class AvailableCommandsEnumData extends AbstractClass {}
+class AvailableCommandsEnumData extends AbstractClass { }
 
 @nativeClass(null)
 export class AvailableCommandsPacket extends Packet {
@@ -1927,8 +1927,12 @@ ItemStackRequestAction.setResolver(ptr => {
 
 @nativeClass(null)
 export class ItemStackRequestActionTransferBase extends ItemStackRequestAction {
+    @nativeField(ItemStackRequestSlotInfo, 0x20) // from ItemStackRequestActionTransferBase::_write
+    src: ItemStackRequestSlotInfo;
+    @nativeField(ItemStackRequestSlotInfo, 0x40) // from ItemStackRequestActionTransferBase::_write
+    dst: ItemStackRequestSlotInfo | null;
     getSrc(): ItemStackRequestSlotInfo {
-        abstract();
+        return this.src;
     }
 }
 

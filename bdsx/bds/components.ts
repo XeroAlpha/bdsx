@@ -1,7 +1,7 @@
 import { abstract } from "../common";
 import { StaticPointer, VoidPointer } from "../core";
 import { CxxVector } from "../cxxvector";
-import { AbstractClass, nativeClass, nativeField } from "../nativeclass";
+import { AbstractClass, NativeStruct, nativeClass, nativeField } from "../nativeclass";
 import { bool_t, int32_t, void_t } from "../nativetype";
 import type { Actor, ActorDefinitionIdentifier, ActorUniqueID, ItemActor, Mob } from "./actor";
 import { Vec3 } from "./blockpos";
@@ -17,13 +17,19 @@ export class PhysicsComponent extends AbstractClass {
     setHasCollision(actor: Actor, bool: boolean): void {
         abstract();
     }
-    setAffectedByGravity(actorData: SyncedActorDataComponent, bool: boolean): void {
+    setAffectedByGravity(actorDataFlagComponent: ActorDataFlagComponent, actorDataDirtyFlagsComponent: ActorDataDirtyFlagsComponent, bool: boolean): void {
         abstract();
     }
 }
 
 @nativeClass(null)
 export class SyncedActorDataComponent extends AbstractClass {}
+
+@nativeClass(null)
+export class ActorDataFlagComponent extends NativeStruct {}
+
+@nativeClass(null)
+export class ActorDataDirtyFlagsComponent extends NativeStruct {}
 /**
  * allows the entity to be a thrown entity.
  */

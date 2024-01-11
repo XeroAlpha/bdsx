@@ -645,7 +645,7 @@ _pass:
     ; original codes
     mov rax, r12 ; [r12]: packet.vftable
     mov rax, [rax] ; temp solution, assembler can't deal with `mov rax, [r12]`
-    lea rdx, [r14+0x200]
+    lea rdx, [r15+0x140]
     mov rcx, r12
     mov rax, [rax+0x18]
     jmp __guard_dispatch_icall_fptr

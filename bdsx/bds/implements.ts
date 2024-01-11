@@ -82,6 +82,8 @@ import { CommandName } from "./commandname";
 import { CommandOrigin, ServerCommandOrigin, VirtualCommandOrigin } from "./commandorigin";
 import "./commandparsertypes";
 import {
+    ActorDataDirtyFlagsComponent,
+    ActorDataFlagComponent,
     CommandBlockComponent,
     ConditionalBandwidthOptimizationComponent,
     ContainerComponent,
@@ -1082,7 +1084,7 @@ Actor.prototype.getVariant = procHacker.js("?getVariant@Actor@@QEBAHXZ", int32_t
 Actor.prototype.setVariant = procHacker.js("?setVariant@Actor@@QEAAXH@Z", void_t, { this: Actor }, int32_t);
 
 const getProjectileComponent = procHacker.js("??$tryGetComponent@VProjectileComponent@@@Actor@@QEAAPEAVProjectileComponent@@XZ", ProjectileComponent, null, Actor);
-const getPhysicsComponent = procHacker.js("??$tryGetComponent@VPhysicsComponent@@@Actor@@QEAAPEAVPhysicsComponent@@XZ", PhysicsComponent, null, Actor);
+// const getPhysicsComponent = procHacker.js("??$tryGetComponent@VPhysicsComponent@@@Actor@@QEAAPEAVPhysicsComponent@@XZ", PhysicsComponent, null, Actor);
 // const getDamageSensorComponent = procHacker.js(
 //     "??$tryGetComponent@VDamageSensorComponent@@@Actor@@QEBAPEBVDamageSensorComponent@@XZ",
 //     DamageSensorComponent,
@@ -1114,8 +1116,8 @@ const getContainerComponent = procHacker.js("??$tryGetComponent@VContainerCompon
     switch (comp) {
         case "minecraft:projectile":
             return getProjectileComponent(this);
-        case "minecraft:physics":
-            return getPhysicsComponent(this);
+        // case "minecraft:physics":
+        //     return getPhysicsComponent(this);
         // case "minecraft:damage_sensor":
         //     return getDamageSensorComponent(this);
         // case "minecraft:command_block":
@@ -1149,10 +1151,11 @@ PhysicsComponent.prototype.setHasCollision = procHacker.js(
     bool_t,
 );
 PhysicsComponent.prototype.setAffectedByGravity = procHacker.js(
-    "?setAffectedByGravity@PhysicsComponent@@QEBAXAEAUSynchedActorDataComponent@@_N@Z",
+    "?setAffectedByGravity@PhysicsComponent@@QEBAXAEAUActorDataFlagComponent@@AEAUActorDataDirtyFlagsComponent@@_N@Z",
     void_t,
     { this: PhysicsComponent },
-    SyncedActorDataComponent,
+    ActorDataFlagComponent,
+    ActorDataDirtyFlagsComponent,
     bool_t,
 );
 
@@ -1942,11 +1945,6 @@ ItemStackRequestPacket.prototype.getRequestBatch = procHacker.js(
     "?getRequestBatch@ItemStackRequestPacket@@QEBAAEBVItemStackRequestBatch@@XZ",
     ItemStackRequestBatch,
     { this: ItemStackRequestPacket },
-);
-ItemStackRequestActionTransferBase.prototype.getSrc = procHacker.js(
-    "?getSrc@ItemStackRequestActionTransferBase@@QEBAAEBUItemStackRequestSlotInfo@@XZ",
-    ItemStackRequestSlotInfo,
-    { this: ItemStackRequestActionTransferBase },
 );
 
 // networkidentifier.ts
@@ -3756,8 +3754,8 @@ ItemComponent.prototype.buildNetworkTag = function (u = new cereal.ReflectionCtx
     return ItemComponent$buildNetworkTag.call(this, u);
 };
 const ItemComponent$initializeFromNetwork = procHacker.jsv(
-    "??_7ChargeableItemComponent@@6B@",
-    "?initializeFromNetwork@ChargeableItemComponent@@UEAA_NAEBVCompoundTag@@AEBUReflectionCtx@cereal@@@Z",
+    "??_7FoodItemComponent@@6B?$NetworkedItemComponent@VFoodItemComponent@@@@@",
+    "?initializeFromNetwork@?$NetworkedItemComponent@VFoodItemComponent@@@@UEAA_NAEBVCompoundTag@@AEBUReflectionCtx@cereal@@@Z",
     void_t,
     { this: ItemComponent },
     CompoundTag,

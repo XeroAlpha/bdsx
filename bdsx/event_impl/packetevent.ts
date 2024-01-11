@@ -184,8 +184,8 @@ function onPacketSendInternal(handler: NetworkSystem, ni: NetworkIdentifier, pac
 
 bedrockServer.withLoading().then(() => {
     const packetHandleSymbol = "?handle@Packet@@QEAAXAEBVNetworkIdentifier@@AEAVNetEventCallback@@AEAV?$shared_ptr@VPacket@@@std@@@Z";
-    const sendToClientsSymbol =
-        "?sendToClients@LoopbackPacketSender@@UEAAXAEBV?$vector@UNetworkIdentifierWithSubId@@V?$allocator@UNetworkIdentifierWithSubId@@@std@@@std@@AEBVPacket@@@Z";
+    const sendToMultipleSymbol =
+        "?sendToMultiple@NetworkSystem@@QEAAXAEBV?$vector@UNetworkIdentifierWithSubId@@V?$allocator@UNetworkIdentifierWithSubId@@@std@@@std@@AEBVPacket@@@Z";
 
     procHacker.verify(
         "packet-receive",
@@ -229,7 +229,7 @@ bedrockServer.withLoading().then(() => {
     // hook before
     asmcode.onPacketBefore = makefunc.np(onPacketBefore, void_t, { name: "onPacketBefore" }, OnPacketRBP, StaticPointer, int32_t, NetworkConnection);
 
-    asmcode.packetBeforeOriginal = proc["<lambda_2b5efa16bbc0277735a33e0ff831c68a>::operator()"];
+    asmcode.packetBeforeOriginal = proc["<lambda_93c29621d786618f23f659b70f04c712>::operator()"];
     procHacker.patching(
         "hook-packet-before",
         packetizeSymbol,
@@ -279,33 +279,34 @@ bedrockServer.withLoading().then(() => {
 
     procHacker.verify(
         "packet-send-all-internal",
-        sendToClientsSymbol,
-        0x123,
+        sendToMultipleSymbol,
+        0xb5,
         // prettier-ignore
         [
             0x4D, 0x8B, 0xC4,              // mov r8, r12    ; packet
             0x48, 0x8B, 0xD3,              // mov rdx, rbx   ; ni
+            0x49, 0x8B, 0xCF,              // mov rcx, r15   ; NetworkSystem
             0xE8, null, null, null, null,  // call NetworkSystem::_sendInternal
         ],
     );
 
-    asmcode.packetSendAllCancelPoint = proc[sendToClientsSymbol].add(0x12e); // jump to after NetworkSystem::_sendInternal
+    asmcode.packetSendAllCancelPoint = proc[sendToMultipleSymbol].add(0xc3); // jump to after NetworkSystem::_sendInternal
 
     // hook send all
     procHacker.patching(
         "hook-packet-send-all",
-        sendToClientsSymbol,
-        0x100,
+        sendToMultipleSymbol,
+        0x96,
         asmcode.packetSendAllHook, // original code depended
         Register.rax,
         true,
         // prettier-ignore
         [ // after call BinaryStream::writeUnsignedVarInt
-            0x49, 0x8B, 0x04, 0x24,                     // mov rax,qword ptr ds:[r12]  ; packet.vftable
-            0x49, 0x8D, 0x96, 0x00, 0x02, 0x00, 0x00,   // lea rdx,qword ptr ds:[r14+200]  ; BinaryStream
-            0x49, 0x8B, 0xCC,                           // mov rcx,r12  ; packet
-            0x48, 0x8B, 0x40, 0x18,                     // mov rax,qword ptr ds:[rax+18]
-            0xFF, 0x15, null, null, null, null,         // call qword ptr ds:[<__guard_dispatch_icall_fptr>]  ; packet::write
+            0x49, 0x8B, 0x04, 0x24,                     // mov rax, qword ptr [r12]       ; packet.vftable
+            0x49, 0x8D, 0x97, 0x40, 0x01, 0x00, 0x00,   // lea rdx, qword ptr [r15+0x140] ; BinaryStream
+            0x49, 0x8B, 0xCC,                           // mov rcx, r12                   ; packet
+            0x48, 0x8B, 0x40, 0x18,                     // mov rax, qword ptr [rax+0x18]  ; packet::write
+            0xFF, 0x15, null, null, null, null,         // call qword ptr ds:[<__guard_dispatch_icall_fptr>]
             // CAUTION: jump target after this
         ],
     );
