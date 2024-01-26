@@ -2779,7 +2779,7 @@ Block.prototype.getVariant = procHacker.js("?getVariant@Block@@QEBAHXZ", int32_t
 Block.prototype.getSerializationId = procHacker.js("?getSerializationId@Block@@QEBAAEBVCompoundTag@@XZ", CompoundTag.ref(), { this: Block });
 Block.prototype.getSilkTouchItemInstance = procHacker.jsv(
     "??_7InfestedBlock@@6B@",
-    "?getSilkTouchItemInstance@InfestedBlock@@MEBA?AVItemInstance@@AEBVBlock@@@Z",
+    "?getSilkTouchItemInstance@BlockLegacy@@MEBA?AVItemInstance@@AEBVBlock@@@Z",
     ItemStack,
     { this: Block, structureReturn: true },
 );
@@ -2962,7 +2962,7 @@ PistonBlockActor.prototype.getFacingDir = procHacker.js(
     BlockSource,
 );
 
-BlockSource.prototype.getChunk = procHacker.js("?getChunk@BlockSource@@QEBAPEAVLevelChunk@@AEBVChunkPos@@@Z", LevelChunk, { this: BlockSource }, ChunkPos);
+BlockSource.prototype.getChunk = procHacker.js("?getChunk@BlockSource@@UEBAPEAVLevelChunk@@AEBVChunkPos@@@Z", LevelChunk, { this: BlockSource }, ChunkPos);
 BlockSource.prototype.getChunkAt = procHacker.js("?getChunkAt@BlockSource@@UEBAPEAVLevelChunk@@AEBVBlockPos@@@Z", LevelChunk, { this: BlockSource }, BlockPos);
 BlockSource.prototype.getChunkSource = procHacker.js("?getChunkSource@BlockSource@@UEAAAEAVChunkSource@@XZ", ChunkSource, { this: BlockSource });
 BlockSource.prototype.checkBlockDestroyPermission = procHacker.js(
