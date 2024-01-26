@@ -3,7 +3,7 @@
 
 import * as util from "util";
 import { capi } from "./capi";
-import { CxxLess } from "./cxxless";
+import { CxxLess } from "./cxxfunctional";
 import { CxxPair, CxxPairType } from "./cxxpair";
 import { mangle } from "./mangle";
 import { NativeClass, nativeClass, NativeClassType, nativeField } from "./nativeclass";
