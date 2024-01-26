@@ -47,6 +47,7 @@ export interface CxxFunction<RETURN, PARAMS extends any[]> extends NativeClass {
 
 export interface CxxFunctionDelegator<RETURN, PARAMS extends any[]> extends CxxFunction<RETURN, PARAMS> {
     delegee: ((...params: PARAMS) => RETURN)[];
+    clone: () => CxxFunctionDelegator<RETURN, PARAMS>;
 }
 
 export const CxxFunction = {
@@ -79,18 +80,27 @@ export const CxxFunction = {
             }
 
             static delegate(delegee: (...params: ParamsType) => ReturnType): CxxFunctionDelegator_Impl {
-                const ptr = makefunc.np((...params: ParamsType) => func.delegee[func.delegee.length - 1].call(null, ...params), returnType, null, ...params);
-                const func = new CxxFunctionDelegator_Impl(true);
-                const impl = func.as(CxxFunctionImpl);
-                impl.vftable = implVFTAddr;
-                impl.callee = ptr;
-                func.impl = impl;
-                func.delegee = [delegee];
-                return func;
+                let delegeeStack: ((...params: ParamsType) => ReturnType)[] = [delegee];
+                const ptr = makefunc.np((...params: ParamsType) => delegeeStack[delegeeStack.length - 1].call(null, ...params), returnType, null, ...params);
+                const construct = (): CxxFunctionDelegator_Impl => {
+                    const func = new CxxFunctionDelegator_Impl(true);
+                    const impl = func.as(CxxFunctionImpl);
+                    impl.vftable = implVFTAddr;
+                    impl.callee = ptr;
+                    func.impl = impl;
+                    Object.defineProperty(func, "delegee", {
+                        get: () => delegeeStack,
+                        set: v => (delegeeStack = v),
+                    });
+                    func.clone = construct;
+                    return func;
+                };
+                return construct();
             }
         }
         class CxxFunctionDelegator_Impl extends CxxFunction_Impl {
             delegee: ((...params: ParamsType) => ReturnType)[];
+            clone: () => CxxFunctionDelegator_Impl;
         }
         return CxxFunction_Impl as unknown as CxxFunctionType<ReturnType, ParamsType>;
     },
