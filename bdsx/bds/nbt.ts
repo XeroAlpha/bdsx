@@ -373,7 +373,8 @@ export class ByteArrayTag extends Tag {
         return this.data.getAsTypedArray(Uint8Array);
     }
     constructWith(data: Uint8Array): void {
-        abstract();
+        this.construct();
+        this.data.setFromTypedArray(data);
     }
     set(array: TypedArrayBuffer | number[]): void {
         if (array instanceof Array) array = new Uint8Array(array);
@@ -624,10 +625,6 @@ export class IntArrayTag extends Tag {
     @nativeField(CxxVector.make(int32_t))
     data: CxxVector<int32_t>;
 
-    [NativeType.ctor](): void {
-        this.vftable = IntArrayTag.vftable;
-    }
-
     value(): Int32Array {
         return this.data.getAsTypedArray(Int32Array);
     }
@@ -669,8 +666,6 @@ export class IntArrayTag extends Tag {
     [util.inspect.custom](depth: number, options: Record<string, any>): unknown {
         return `IntArrayTag ${util.inspect(this.data.getAsTypedArray(Int32Array), options)}`;
     }
-
-    static readonly vftable = proc["??_7IntArrayTag@@6B@"];
 }
 
 export type NBT = Int32Array | Uint8Array | NBT.Compound | NBT[] | NBT.Primitive | NBT.Numeric | number | string | Tag | boolean | null;

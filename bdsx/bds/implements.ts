@@ -3426,6 +3426,7 @@ const FloatTag$vftable = proc["??_7FloatTag@@6B@"];
 const DoubleTag$vftable = proc["??_7DoubleTag@@6B@"];
 const ByteArrayTag$vftable = proc["??_7ByteArrayTag@@6B@"];
 const StringTag$vftable = proc["??_7StringTag@@6B@"];
+const IntArrayTag$vftable = proc["??_7IntArrayTag@@6B@"];
 
 EndTag.prototype[NativeType.ctor] = function () {
     this.vftable = EndTag$vftable;
@@ -3452,10 +3453,9 @@ ByteArrayTag.prototype[NativeType.ctor] = function () {
     this.vftable = ByteArrayTag$vftable;
     this.data.construct();
 };
-ByteArrayTag.prototype.constructWith = function (data: Uint8Array): void {
-    this.vftable = ByteArrayTag$vftable;
+IntArrayTag.prototype[NativeType.ctor] = function () {
+    this.vftable = IntArrayTag$vftable;
     this.data.construct();
-    this.data.set(data);
 };
 const StringTagDataOffset = StringTag.offsetOf("data");
 StringTag.prototype[NativeType.ctor] = function () {
