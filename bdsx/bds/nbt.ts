@@ -370,7 +370,7 @@ export class ByteArrayTag extends Tag {
     data: CxxVector<uint8_t>;
 
     value(): Uint8Array {
-        return this.data.getAsTypedArray(Uint8Array);
+        return this.data.toTypedArray(Uint8Array);
     }
     constructWith(data: Uint8Array): void {
         this.construct();
@@ -389,7 +389,7 @@ export class ByteArrayTag extends Tag {
         return this.data.size();
     }
     toUint8Array(): Uint8Array {
-        return this.data.getAsTypedArray(Uint8Array);
+        return this.data.toTypedArray(Uint8Array);
     }
     writeTo(writer: NBTWriter): void {
         writer.byteArray(this.toUint8Array());
@@ -407,7 +407,7 @@ export class ByteArrayTag extends Tag {
     }
 
     [util.inspect.custom](depth: number, options: Record<string, any>): unknown {
-        return `ByteArrayTag ${util.inspect(this.data.getAsTypedArray(Uint8Array), options)}`;
+        return `ByteArrayTag ${util.inspect(this.data.toTypedArray(Uint8Array), options)}`;
     }
 }
 
@@ -626,7 +626,7 @@ export class IntArrayTag extends Tag {
     data: CxxVector<int32_t>;
 
     value(): Int32Array {
-        return this.data.getAsTypedArray(Int32Array);
+        return this.data.toTypedArray(Int32Array);
     }
 
     constructWith(data: Int32Array): void {
@@ -650,7 +650,7 @@ export class IntArrayTag extends Tag {
     }
 
     toInt32Array(): Int32Array {
-        return this.data.getAsTypedArray(Int32Array);
+        return this.data.toTypedArray(Int32Array);
     }
 
     writeTo(writer: NBTWriter): void {
@@ -664,7 +664,7 @@ export class IntArrayTag extends Tag {
     }
 
     [util.inspect.custom](depth: number, options: Record<string, any>): unknown {
-        return `IntArrayTag ${util.inspect(this.data.getAsTypedArray(Int32Array), options)}`;
+        return `IntArrayTag ${util.inspect(this.data.toTypedArray(Int32Array), options)}`;
     }
 }
 

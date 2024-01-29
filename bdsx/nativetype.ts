@@ -702,9 +702,9 @@ export const bin128_t = new NativeType<string>(
     bin128CannotBeUsedAsTheParameterType,
     bin128CannotBeUsedAsTheParameterType,
 ).extends({
-    one: "\u0001\0\0\0",
-    zero: "\0\0\0\0",
-    minus_one: "\uffff\uffff\uffff\uffff",
+    one: "\u0001\0\0\0\0\0\0\0",
+    zero: "\0\0\0\0\0\0\0\0",
+    minus_one: "\uffff\uffff\uffff\uffff\uffff\uffff\uffff\uffff",
 });
 export type bin128_t = string;
 
