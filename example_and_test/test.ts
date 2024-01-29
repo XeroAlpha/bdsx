@@ -658,7 +658,7 @@ Tester.concurrency(
 
             const vec1 = CxxVector.make(int32_t).construct();
             vec1.setFromArray(values);
-            const typedArray = vec1.getAsTypedArray(Int32Array);
+            const typedArray = vec1.toTypedArray(Int32Array);
             this.equals(values.length, typedArray.length);
             for (let i = 0; i < values.length; i++) {
                 this.equals(values[i], typedArray[i]);

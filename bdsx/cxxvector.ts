@@ -541,7 +541,7 @@ export abstract class CxxVector<T> extends NativeClass implements Iterable<T> {
         if (n < size) this.resize(n);
     }
 
-    getAsTypedArray<T extends TypedArrayBuffer>(type: TypedArrayBufferConstructor<T>): T {
+    toTypedArray<T extends TypedArrayBuffer>(type: TypedArrayBufferConstructor<T>): T {
         const beginptr = this.getPointer(0);
         const endptr = this.getPointer(8);
         const sizeBytes = endptr.subptr(beginptr);
