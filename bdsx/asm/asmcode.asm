@@ -511,9 +511,9 @@ export def enabledPacket:byte[PACKET_ID_COUNT]
 export def lastSenderNetId:qword
 
 export proc packetRawHook
-    ; dword ptr[rbp+0x1a0] - packetId
+    ; dword ptr[rbp+0x1b0] - packetId
     mov lastSenderNetId, r15 ; NetworkConnection
-    mov edx, dword ptr[rbp+0x1a0]
+    mov edx, dword ptr[rbp+0x1b0]
     lea rax, enabledPacket
     mov al, byte ptr[rax+rdx]
     unwind
@@ -524,7 +524,7 @@ export proc packetRawHook
     jmp onPacketRaw
  _skipEvent:
     ; rdx - packetId
-    lea rcx, [rbp+0x1b0] ; packet
+    lea rcx, [rbp+0x1b8] ; packet
     jmp createPacketRaw
 endp
 
@@ -533,12 +533,12 @@ export def onPacketBefore:qword
 export proc packetBeforeHook
     ; dword ptr[rbp+0x180] - packetId
     stack 28h
-    lea rdx,qword ptr[rbp+0x2c0] ; original code
-    lea rcx,qword ptr[rbp+0x28] ; original code
+    lea rdx,qword ptr[rbp+0x2e0] ; original code
+    lea rcx,qword ptr[rbp+0x48] ; original code
     call packetBeforeOriginal ; original code
     unwind
     lea rcx, enabledPacket
-    mov r8d, dword ptr[rbp+0x1a0] ; packetId
+    mov r8d, dword ptr[rbp+0x1b0] ; packetId
     movzx ecx, byte ptr[rcx+r8]
     test cl, 0x02
     jz _skipEvent
@@ -559,18 +559,18 @@ export proc packetAfterHook
     stack 28h
 
     ; orignal codes
-    mov r8, r12 ; callback (null)
-    mov rdx, r15 ; NetworkConnection
+    mov r8, r12 ; NetworkIdentifier
+    mov rdx, r15 ; PacketHandlerDispatcherInstance
     mov rax, [rax+8]
-    call __guard_dispatch_icall_fptr ; ServerNetworkHandler::handle()
+    call __guard_dispatch_icall_fptr ; PacketHandlerDispatcherInstance::handle
 
     lea r10, enabledPacket
-    mov r8d, dword ptr[rbp+0x1a0] ; packetId
+    mov r8d, dword ptr[rbp+0x1b0] ; packetId
     movzx eax, byte ptr[r10+r8]
     unwind
     test al, 0x04
     jz _skipEvent
-    mov rcx,[rbp+0x1b0] ; packet
+    mov rcx,[rbp+0x1b8] ; packet
     mov rdx, r15 ; NetworkConnection->ni
     ; r8 - packetId
     jmp onPacketAfter

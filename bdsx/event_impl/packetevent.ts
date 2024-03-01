@@ -48,7 +48,7 @@ class OnPacketRBP extends AbstractClass {
     // NetworkSystem::_sortAndPacketizeEvents before MinecraftPackets::createPacket
     @nativeField(CxxSharedPtr.make(Packet), 0x1b0)
     packet: CxxSharedPtr<Packet>; // NetworkSystem::_sortAndPacketizeEvents before MinecraftPackets::createPacket
-    @nativeField(ReadOnlyBinaryStream, 0x210)
+    @nativeField(ReadOnlyBinaryStream, 0x280)
     stream: ReadOnlyBinaryStream; // after NetworkConnection::receivePacket
 }
 
@@ -189,7 +189,7 @@ bedrockServer.withLoading().then(() => {
     procHacker.verify(
         "packet-receive",
         packetizeSymbol,
-        0x1f9,
+        0x1c0,
         // prettier-ignore
         [
             0x49, 0x8b, 0xcf,               // mov rcx, r15  ; NetworkConnection
@@ -199,10 +199,10 @@ bedrockServer.withLoading().then(() => {
     procHacker.verify(
         "packet-construct-stream",
         packetizeSymbol,
-        0x226,
+        0x1e6,
         // prettier-ignore
         [
-            0x48, 0x8d, 0x8d, 0x10, 0x02, 0x00, 0x00, // lea rcx, qword ptr [rbp+0x210]  ; ReadOnlyBinaryStream
+            0x48, 0x8d, 0x8d, 0x80, 0x02, 0x00, 0x00, // lea rcx, qword ptr [rbp+0x280]  ; ReadOnlyBinaryStream
             0xe8, null, null, null, null,             // call ReadOnlyBinaryStream::ReadOnlyBinaryStream
         ],
     );
@@ -212,14 +212,14 @@ bedrockServer.withLoading().then(() => {
     procHacker.patching(
         "hook-packet-raw",
         packetizeSymbol,
-        0x32c,
+        0x2fe,
         asmcode.packetRawHook, // original code depended
         Register.rax,
         true,
         // prettier-ignore
         [
-            0x8B, 0x95, 0xa0, 0x01, 0x00, 0x00,        // mov edx,dword ptr [rbp+0x1a0]  ; packetId
-            0x48, 0x8D, 0x8D, 0xb0, 0x01, 0x00, 0x00,  // lea rcx,qword ptr [rbp+0x1b0]  ; packet
+            0x8B, 0x95, 0xb0, 0x01, 0x00, 0x00,        // mov edx,dword ptr [rbp+0x1b0]  ; packetId
+            0x48, 0x8D, 0x8D, 0xb8, 0x01, 0x00, 0x00,  // lea rcx,qword ptr [rbp+0x1b8]  ; packet
             0xE8, null, null, null, null,              // call MinecraftPackets::createPacket
             0x90,                                      // nop
         ],
@@ -228,18 +228,18 @@ bedrockServer.withLoading().then(() => {
     // hook before
     asmcode.onPacketBefore = makefunc.np(onPacketBefore, void_t, { name: "onPacketBefore" }, OnPacketRBP, StaticPointer, int32_t, NetworkConnection);
 
-    asmcode.packetBeforeOriginal = proc["<lambda_13ba087ac3114f61dd694dc11119cca8>::operator()"];
+    asmcode.packetBeforeOriginal = proc["<lambda_684eb4ba3830ac6bc708e9f6673eb183>::operator()"];
     procHacker.patching(
         "hook-packet-before",
         packetizeSymbol,
-        0x404,
+        0x3e5,
         asmcode.packetBeforeHook, // original code depended
         Register.rax,
         true,
         // prettier-ignore
         [
-            0x48, 0x8D, 0x95, 0xC0, 0x02, 0x00, 0x00,  // lea rdx,qword ptr [rbp+2c0]  ; Packet*
-            0x48, 0x8D, 0x4D, 0x28,                    // lea rcx,qword ptr [rbp+28]   ; Result
+            0x48, 0x8D, 0x95, 0xE0, 0x02, 0x00, 0x00,  // lea rdx,qword ptr [rbp+2e0]  ; Packet*
+            0x48, 0x8D, 0x4D, 0x48,                    // lea rcx,qword ptr [rbp+48]   ; Result*
             0xE8, null, null, null, null,              // call <>::operator()
             0x90,                                      // nop
         ],
@@ -253,15 +253,15 @@ bedrockServer.withLoading().then(() => {
     procHacker.patching(
         "hook-packet-after",
         packetizeSymbol,
-        0x854,
+        0x834,
         asmcode.packetAfterHook, // original code depended
         Register.rdx,
         true,
         // prettier-ignore
         [
-            0x4D, 0x8B, 0xC4,                          // mov r8,r12
-            0x49, 0x8B, 0xD7,                          // mov rdx,r14
-            0x48, 0x8B, 0x40, 0x08,                    // mov rax,qword ptr ds:[rax+8]
+            0x4D, 0x8B, 0xC4,                          // mov r8,r12 ; NetworkIdentifier
+            0x49, 0x8B, 0xD7,                          // mov rdx,r15 ; PacketHandlerDispatcherInstance
+            0x48, 0x8B, 0x40, 0x08,                    // mov rax,qword ptr ds:[rax+8] ; PacketHandlerDispatcherInstance::handle
             0xFF, 0x15, null, null, null, null,        // call qword ptr ds:[<__guard_dispatch_icall_fptr>]
         ],
     );

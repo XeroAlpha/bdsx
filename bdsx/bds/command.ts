@@ -517,6 +517,7 @@ export class CommandMessage extends NativeClass {
     static readonly [CommandParameterType.symbol]: true;
     data: CxxVector<CommandMessage.MessageComponent>;
 
+    /** @deprecated */
     getMessage(origin: CommandOrigin): string {
         abstract();
     }
@@ -538,12 +539,12 @@ CommandMessage.abstract(
     },
     0x18,
 );
-CommandMessage.prototype.getMessage = procHacker.js(
-    "?getMessage@CommandMessage@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBVCommandOrigin@@@Z",
-    CxxString,
-    { this: CommandMessage, structureReturn: true },
-    CommandOrigin,
-);
+// CommandMessage.prototype.getMessage = procHacker.js(
+//     "?getMessage@CommandMessage@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBVCommandOrigin@@@Z",
+//     CxxString,
+//     { this: CommandMessage, structureReturn: true },
+//     CommandOrigin,
+// );
 
 @nativeClass()
 export class CommandRawText extends NativeClass {

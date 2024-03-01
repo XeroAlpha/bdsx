@@ -247,7 +247,7 @@ function _launch(asyncResolve: () => void): void {
         nonOwnerPointerStructureManager!.dispose();
         decay(bedrockServer.structureManager);
     }, void_t);
-    asmcode.gameThreadInner = proc["<lambda_89b81b0e342544a4b3bbd35a059fe5b8>::operator()"]; // caller of ServerInstance::_update
+    asmcode.gameThreadInner = proc["<lambda_71c612a260bddd081da5a9a90baf1504>::operator()"]; // caller of ServerInstance::_update
     asmcode.free = dll.ucrtbase.free.pointer;
 
     // hook game thread
@@ -255,7 +255,7 @@ function _launch(asyncResolve: () => void): void {
 
     procHacker.patching(
         "hook-game-thread",
-        "std::thread::_Invoke<std::tuple<<lambda_89b81b0e342544a4b3bbd35a059fe5b8> >,0>", // caller of gameThreadInner
+        "std::thread::_Invoke<std::tuple<<lambda_71c612a260bddd081da5a9a90baf1504> >,0>", // caller of gameThreadInner
         0x6,
         asmcode.gameThreadHook, // original depended
         Register.rax,
@@ -337,8 +337,8 @@ function _launch(asyncResolve: () => void): void {
      */
     procHacker.patching(
         "update-hook",
-        "<lambda_89b81b0e342544a4b3bbd35a059fe5b8>::operator()", // caller of ServerInstance::_update
-        0xbef,
+        "<lambda_71c612a260bddd081da5a9a90baf1504>::operator()", // caller of ServerInstance::_update
+        0xb70,
         asmcode.updateWithSleep,
         Register.rax,
         true,
@@ -347,7 +347,7 @@ function _launch(asyncResolve: () => void): void {
             0x48, 0x2B, 0xC8,                         // sub rcx,rax
             0x48, 0x81, 0xF9, 0x88, 0x13, 0x00, 0x00, // cmp rcx,1388
             0x7C, 0x0B,                               // jl :after_nop
-            0x48, 0x8D, 0x4C, 0x24, 0x38,             // lea rcx,qword ptr [rsp+38]
+            0x48, 0x8D, 0x4C, 0x24, 0x30,             // lea rcx,qword ptr [rsp+30]
             0xE8, null, null, null, null,             // call std::this_thread::sleep_until<>
             0x90,                                     // nop
         ],
