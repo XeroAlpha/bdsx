@@ -1,3 +1,4 @@
+import { abstract } from "./common";
 import { VoidPointer } from "./core";
 import { dll } from "./dll";
 import { CallablePointer, ParamType, TypeFrom_np2js, TypesFromParamIds_np2js, makefunc } from "./makefunc";
@@ -69,32 +70,23 @@ class CxxFunctionImpl extends NativeClass {
     callee: VoidPointer;
 }
 
-@nativeClass(0x40)
-class CxxFunctionBase extends NativeClass {
-    @nativeField(VoidPointer, 0x38)
-    public impl: CxxFunctionImpl;
-}
-
 /**
  * Experimental support of std::function, its interface may change after makefunc.np could be destructed.
  */
-export interface CxxFunctionType<RETURN, PARAMS extends any[]> extends NativeClassType<CxxFunction<RETURN, PARAMS>> {
-    wrapNative(ptr: VoidPointer): CxxFunction<RETURN, PARAMS>;
-    wrap(f: (...params: PARAMS) => RETURN): CxxFunction<RETURN, PARAMS>;
-    delegate(delegee: (...params: PARAMS) => RETURN): CxxFunctionDelegator<RETURN, PARAMS>;
-}
+@nativeClass(0x40)
+export class CxxFunction<RETURN, PARAMS extends any[]> extends NativeClass {
+    @nativeField(VoidPointer, 0x38)
+    public impl: CxxFunctionImpl;
 
-export interface CxxFunction<RETURN, PARAMS extends any[]> extends NativeClass {
-    call(...params: PARAMS): RETURN;
-}
+    invoke(...params: PARAMS): RETURN {
+        abstract();
+    }
 
-export interface CxxFunctionDelegator<RETURN, PARAMS extends any[]> extends CxxFunction<RETURN, PARAMS> {
-    delegee: ((...params: PARAMS) => RETURN)[];
-    clone: () => CxxFunctionDelegator<RETURN, PARAMS>;
-}
+    clone(): this {
+        abstract();
+    }
 
-export const CxxFunction = {
-    make<RETURN extends ParamType, PARAMS extends ParamType[]>(
+    static make<RETURN extends ParamType, PARAMS extends ParamType[]>(
         implVFTAddr: VoidPointer,
         returnType: RETURN,
         ...params: PARAMS
@@ -103,9 +95,9 @@ export const CxxFunction = {
         type ParamsType = TypesFromParamIds_np2js<PARAMS>;
         const implVFT = implVFTAddr.as(CxxFunctionImpl$VFTable);
         const implVFT_Do_call = implVFT._Do_call.as(CallablePointer.make(returnType, { this: CxxFunctionImpl }, ...params));
-        class CxxFunction_Impl extends CxxFunctionBase implements CxxFunction<ReturnType, ParamsType> {
-            call(...params: ParamsType): ReturnType {
-                return implVFT_Do_call.invoker.call(this.impl, ...params);
+        class CxxFunction_Impl extends CxxFunction<ReturnType, ParamsType> {
+            invoke(...params: ParamsType): ReturnType {
+                return implVFT_Do_call.invoke.call(this.impl, ...params);
             }
 
             static wrapNative(ptr: VoidPointer): CxxFunction_Impl {
@@ -114,6 +106,7 @@ export const CxxFunction = {
                 impl.vftable = implVFT;
                 impl.callee = ptr;
                 func.impl = impl;
+                func.clone = () => this.wrapNative(ptr);
                 return func;
             }
 
@@ -126,11 +119,7 @@ export const CxxFunction = {
                 let delegeeStack: ((...params: ParamsType) => ReturnType)[] = [delegee];
                 const ptr = makefunc.np((...params: ParamsType) => delegeeStack[delegeeStack.length - 1].call(null, ...params), returnType, null, ...params);
                 const construct = (): CxxFunctionDelegator_Impl => {
-                    const func = new CxxFunctionDelegator_Impl(true);
-                    const impl = func.as(CxxFunctionImpl);
-                    impl.vftable = implVFTAddr;
-                    impl.callee = ptr;
-                    func.impl = impl;
+                    const func = this.wrapNative(ptr) as CxxFunctionDelegator_Impl;
                     Object.defineProperty(func, "delegee", {
                         get: () => delegeeStack,
                         set: v => (delegeeStack = v),
@@ -141,10 +130,19 @@ export const CxxFunction = {
                 return construct();
             }
         }
-        class CxxFunctionDelegator_Impl extends CxxFunction_Impl {
+        interface CxxFunctionDelegator_Impl extends CxxFunction_Impl {
             delegee: ((...params: ParamsType) => ReturnType)[];
-            clone: () => CxxFunctionDelegator_Impl;
         }
-        return CxxFunction_Impl as unknown as CxxFunctionType<ReturnType, ParamsType>;
-    },
+        return CxxFunction_Impl;
+    }
+}
+
+export interface CxxFunctionDelegator<RETURN, PARAMS extends any[]> extends CxxFunction<RETURN, PARAMS> {
+    delegee: ((...params: PARAMS) => RETURN)[];
+}
+
+export type CxxFunctionType<RETURN, PARAMS extends any[]> = typeof CxxFunction<RETURN, PARAMS> & {
+    wrapNative(ptr: VoidPointer): CxxFunction<RETURN, PARAMS>;
+    wrap(f: (...params: PARAMS) => RETURN): CxxFunction<RETURN, PARAMS>;
+    delegate(delegee: (...params: PARAMS) => RETURN): CxxFunctionDelegator<RETURN, PARAMS>;
 };

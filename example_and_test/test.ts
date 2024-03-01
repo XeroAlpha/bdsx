@@ -51,7 +51,7 @@ import { dllraw } from "bdsx/dllraw";
 import { events } from "bdsx/event";
 import { HashSet } from "bdsx/hashset";
 import { bedrockServer } from "bdsx/launcher";
-import { makefunc } from "bdsx/makefunc";
+import { CallablePointer, makefunc } from "bdsx/makefunc";
 import { mce } from "bdsx/mce";
 import { AbstractClass, nativeClass, NativeClass, nativeField } from "bdsx/nativeclass";
 import { bin64_t, bool_t, CxxString, float32_t, float64_t, int16_t, int32_t, int64_as_float_t, int8_t, uint16_t } from "bdsx/nativetype";
@@ -516,6 +516,13 @@ Tester.concurrency(
                 CxxString,
             );
             this.equals(strStructureReturn("test"), "test", "CxxString structureReturn failed");
+        },
+
+        callablePtr() {
+            const callablePtrType = CallablePointer.make(float64_t, null, CxxString);
+            const np = makefunc.np(str => Number(str), float64_t, null, CxxString);
+            const callablePtr = np.as(callablePtrType);
+            this.equals(callablePtr.invoke("123"), 123);
         },
 
         vectorcopy() {

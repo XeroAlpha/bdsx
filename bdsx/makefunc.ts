@@ -742,39 +742,25 @@ X64Assembler.prototype.make = function <OPTS extends MakeFuncOptionsWithName<any
     return makefunc.js(this.alloc(opts && opts.name), returnType, opts, ...params);
 };
 
-abstract class CallablePointerBase<OPTS extends MakeFuncOptions<any> | null, RETURN extends ParamType, PARAMS extends ParamType[]> extends VoidPointer {
-    protected abstract returnType: RETURN;
-    protected abstract params: PARAMS;
-    protected abstract opts?: OPTS;
-    private _invoker?: FunctionFromTypes_js<this, OPTS, PARAMS, RETURN>;
-    get invoker(): FunctionFromTypes_js<this, OPTS, PARAMS, RETURN> {
-        if (this._invoker === undefined) {
-            this._invoker = makefunc.js(this, this.returnType, this.opts, ...this.params);
-        }
-        return this._invoker;
-    }
-}
-
-export interface CallablePointerType<THIS, RETURN, PARAMS extends any[]> extends ParamType {
-    new (): CallablePointer<THIS, RETURN, PARAMS>;
-    prototype: CallablePointer<THIS, RETURN, PARAMS>;
-}
-
-export interface CallablePointer<THIS, RETURN, PARAMS extends any[]> extends VoidPointer {
-    readonly invoker: (this: THIS, ...params: PARAMS) => RETURN;
-}
-
-export const CallablePointer = {
-    make<OPTS extends MakeFuncOptions<any> | null, RETURN extends ParamType, PARAMS extends ParamType[]>(
+/**
+ * A function pointer with lazy initialized invoke() function
+ */
+export class CallablePointer<THIS, RETURN, PARAMS extends any[]> extends VoidPointer {
+    readonly invoke: (this: THIS, ...params: PARAMS) => RETURN;
+    static make<OPTS extends MakeFuncOptions<any> | null, RETURN extends ParamType, PARAMS extends ParamType[]>(
         returnType: RETURN,
         opts?: OPTS,
         ...params: PARAMS
-    ): CallablePointerType<GetThisFromOpts<OPTS>, TypeFrom_np2js<RETURN>, TypesFromParamIds_js2np<PARAMS>> {
-        class CallablePointerImpl extends CallablePointerBase<OPTS, RETURN, PARAMS> {
-            protected returnType: RETURN = returnType;
-            protected params: PARAMS = params;
-            protected opts?: OPTS = opts;
-        }
-        return CallablePointerImpl as CallablePointerType<GetThisFromOpts<OPTS>, TypeFrom_np2js<RETURN>, TypesFromParamIds_js2np<PARAMS>>;
-    },
-};
+    ): typeof CallablePointer<GetThisFromOpts<OPTS>, TypeFrom_np2js<RETURN>, TypesFromParamIds_js2np<PARAMS>> {
+        class CallablePointerImpl extends CallablePointer<GetThisFromOpts<OPTS>, TypeFrom_np2js<RETURN>, TypesFromParamIds_js2np<PARAMS>> {}
+        Object.defineProperty(CallablePointerImpl.prototype, "invoke", {
+            configurable: true,
+            get() {
+                const value = makefunc.js(this, returnType, opts, ...params);
+                Object.defineProperty(this, "invoke", { value });
+                return value;
+            },
+        });
+        return CallablePointerImpl;
+    }
+}
